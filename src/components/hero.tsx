@@ -41,7 +41,22 @@ export function Hero() {
             </Link>
           </div>
 
-          <div className="animate-fade-in mt-12 grid grid-cols-3 gap-6 sm:gap-10" style={{ animationDelay: "0.4s" }}>
+          <div className="animate-fade-in mt-8 flex items-center justify-center gap-2 text-sm text-muted" style={{ animationDelay: "0.35s" }}>
+            <span>Follow us on</span>
+            <a
+              href="https://x.com/gitbetapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-accent"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              @gitbetapp
+            </a>
+          </div>
+
+          <div className="animate-fade-in mt-10 grid grid-cols-3 gap-6 sm:gap-10" style={{ animationDelay: "0.4s" }}>
             <QuickStat value="$2.3M" label="Total Volume" />
             <QuickStat value="18.5k" label="Predictors" />
             <QuickStat value="72%" label="Avg Accuracy" />
