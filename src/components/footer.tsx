@@ -66,13 +66,13 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               <li>
                 <a
-                  href="https://x.com/"
+                  href="https://x.com/gitbetapp"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted hover:text-foreground transition-colors"
                   id="twitter-link"
                 >
-                  X (Twitter)
+                  @gitbetapp
                 </a>
               </li>
               <li>
