@@ -7,24 +7,26 @@ import { BetModal } from "@/components/bet-modal";
 
 interface MarketData {
   id: string;
-  repo: string;
-  owner: string;
   question: string;
   description: string | null;
-  category: "stars" | "forks" | "releases" | "trending";
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  coin_image: string | null;
+  target_price: number;
+  current_price: number;
+  price_change_24h: number;
+  category: string;
   end_date: string;
   resolved: boolean;
   outcome: boolean | null;
-  language: string | null;
-  language_color: string | null;
-  stars: number;
-  forks: number;
   yesPercent: number;
   volume: number;
   hot: boolean;
 }
 
-const filters = ["All", "Stars", "Releases", "Forks", "Trending"] as const;
+const MAJOR_COINS = ["bitcoin", "ethereum"];
+const filters = ["All", "BTC", "ETH", "Altcoins"] as const;
 type Filter = (typeof filters)[number];
 
 async function loadMarkets(): Promise<MarketData[]> {
@@ -56,22 +58,24 @@ export default function MarketsPage() {
   }, [refreshKey]);
 
   const filtered = markets.filter((m) => {
-    const matchesFilter =
-      activeFilter === "All" ||
-      m.category.toLowerCase() === activeFilter.toLowerCase();
+    let matchesFilter = true;
+    if (activeFilter === "BTC") matchesFilter = m.coin_id === "bitcoin";
+    else if (activeFilter === "ETH") matchesFilter = m.coin_id === "ethereum";
+    else if (activeFilter === "Altcoins") matchesFilter = !MAJOR_COINS.includes(m.coin_id);
+
     const matchesSearch =
       m.question.toLowerCase().includes(search.toLowerCase()) ||
-      m.repo.toLowerCase().includes(search.toLowerCase()) ||
-      m.owner.toLowerCase().includes(search.toLowerCase());
+      m.coin_name.toLowerCase().includes(search.toLowerCase()) ||
+      m.coin_symbol.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Markets</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Crypto Markets</h1>
         <p className="mt-1 text-sm text-muted">
-          Browse and bet on open source predictions
+          Browse and bet on crypto price predictions
         </p>
       </div>
 
@@ -94,7 +98,7 @@ export default function MarketsPage() {
 
         <input
           type="text"
-          placeholder="Search markets..."
+          placeholder="Search coins..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-9 rounded-lg border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent sm:w-64"

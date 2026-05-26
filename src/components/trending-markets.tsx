@@ -7,13 +7,15 @@ import Link from "next/link";
 
 interface ApiMarket {
   id: string;
-  repo: string;
-  owner: string;
   question: string;
   description: string | null;
-  language: string | null;
-  language_color: string | null;
-  stars: number;
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  coin_image: string | null;
+  target_price: number;
+  current_price: number;
+  price_change_24h: number;
   yesPercent: number;
   volume: number;
   hot: boolean;
@@ -40,13 +42,15 @@ export function TrendingMarkets() {
 
   const fallbackMarkets = mockMarkets.filter((m) => m.hot).map((m) => ({
     id: m.id,
-    repo: m.repo,
-    owner: m.owner,
     question: m.question,
     description: m.description,
-    language: m.language,
-    language_color: m.languageColor,
-    stars: m.stars,
+    coin_id: m.coin_id,
+    coin_symbol: m.coin_symbol,
+    coin_name: m.coin_name,
+    coin_image: m.coin_image,
+    target_price: m.target_price,
+    current_price: m.current_price,
+    price_change_24h: m.price_change_24h,
     yesPercent: m.yesPercent,
     volume: m.volume,
     hot: m.hot,
@@ -62,7 +66,7 @@ export function TrendingMarkets() {
             Trending Markets
           </h2>
           <p className="mt-1 text-sm text-muted">
-            The hottest predictions right now
+            The hottest crypto predictions right now
           </p>
         </div>
         <Link

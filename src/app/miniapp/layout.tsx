@@ -9,7 +9,7 @@ const miniappEmbed = JSON.stringify({
     title: "Predict Now",
     action: {
       type: "launch_miniapp",
-      name: "GitBet",
+      name: "CryptoBet",
       url: `${DOMAIN}/miniapp`,
       splashImageUrl: `${DOMAIN}/icon-200`,
       splashBackgroundColor: "#0a0a0f",
@@ -18,8 +18,8 @@ const miniappEmbed = JSON.stringify({
 });
 
 export const metadata: Metadata = {
-  title: "GitBet — Farcaster Mini App",
-  description: "Predict the future of open source. Bet on GitHub repo stars, forks, and trends.",
+  title: "CryptoBet — Crypto Prediction Market",
+  description: "Predict crypto prices. Bet on BTC, ETH, SOL, and more. Powered by Base chain.",
   other: {
     "fc:miniapp": miniappEmbed,
     "fc:frame": miniappEmbed.replace("launch_miniapp", "launch_frame"),

@@ -17,13 +17,13 @@ export function Hero() {
           <h1 className="animate-fade-in mt-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl" style={{ animationDelay: "0.1s" }}>
             Predict the Future of{" "}
             <span className="bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">
-              Open Source
+              Crypto
             </span>
           </h1>
 
           <p className="animate-fade-in mt-4 text-base text-muted sm:text-lg lg:text-xl" style={{ animationDelay: "0.2s" }}>
-            Bet on GitHub repos, predict stars, forks, releases, and trends.
-            The ultimate prediction market for developers.
+            Bet on BTC, ETH, SOL and more. Predict crypto prices with free tokens or ETH on Base.
+            The ultimate crypto prediction market on Farcaster.
           </p>
 
           <div className="animate-fade-in mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row" style={{ animationDelay: "0.3s" }}>
@@ -52,7 +52,7 @@ export function Hero() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
-              @gitbetapp
+              @cryptobet
             </a>
           </div>
 
