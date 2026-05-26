@@ -67,8 +67,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             .eq("github_id", githubId);
         }
       } else if (account?.provider === "twitter" && profile) {
-        const twitterId = `tw_${profile.data?.id || profile.id}`;
-        const username = (profile.data?.username as string) || user.name || "unknown";
+        const p = profile as Record<string, unknown>;
+        const data = (p.data || p) as Record<string, unknown>;
+        const twitterId = `tw_${data.id || p.id}`;
+        const username = (data.username as string) || user.name || "unknown";
 
         const { data: existing } = await supabase
           .from("users")
@@ -80,7 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await supabase.from("users").insert({
             github_id: twitterId,
             username,
-            name: (profile.data?.name as string) || user.name || null,
+            name: (data.name as string) || user.name || null,
             avatar_url: user.image || null,
           });
         } else {
@@ -88,7 +90,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             .from("users")
             .update({
               username,
-              name: (profile.data?.name as string) || user.name || null,
+              name: (data.name as string) || user.name || null,
               avatar_url: user.image || null,
               updated_at: new Date().toISOString(),
             })
@@ -148,7 +150,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "github" && profile) {
         token.sub = String(profile.id);
       } else if (account?.provider === "twitter" && profile) {
-        token.sub = `tw_${profile.data?.id || profile.id}`;
+        const p = profile as Record<string, unknown>;
+        const data = (p.data || p) as Record<string, unknown>;
+        token.sub = `tw_${data.id || p.id}`;
       } else if (account?.provider === "farcaster" && user) {
         token.sub = user.id;
       }
