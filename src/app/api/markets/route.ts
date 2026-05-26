@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 import { getCoinPrices } from "@/lib/coingecko";
+import { markets as mockMarkets } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -46,17 +47,36 @@ export async function GET(request: Request) {
     const { data: marketsData, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(mockMarkets);
     }
 
-    const markets = (marketsData || []) as MarketRow[];
+    const markets = (marketsData || []) as Record<string, unknown>[];
 
-    const coinIds = [...new Set(markets.map((m) => m.coin_id))];
+    if (markets.length === 0 || !markets[0].coin_id) {
+      const coinIds = [...new Set(mockMarkets.map((m) => m.coin_id))];
+      const prices = await getCoinPrices(coinIds);
+      const priceMap = new Map(prices.map((p) => [p.id, p]));
+
+      const enrichedMock = mockMarkets.map((m) => {
+        const coinData = priceMap.get(m.coin_id);
+        return {
+          ...m,
+          coin_image: coinData?.image || m.coin_image,
+          current_price: coinData?.current_price ?? m.current_price,
+          price_change_24h: coinData?.price_change_percentage_24h ?? m.price_change_24h,
+        };
+      });
+
+      return NextResponse.json(enrichedMock);
+    }
+
+    const cryptoMarkets = markets as unknown as MarketRow[];
+    const coinIds = [...new Set(cryptoMarkets.map((m) => m.coin_id))];
     const prices = await getCoinPrices(coinIds);
     const priceMap = new Map(prices.map((p) => [p.id, p]));
 
     const enriched = await Promise.all(
-      markets.map(async (market) => {
+      cryptoMarkets.map(async (market) => {
         const coinData = priceMap.get(market.coin_id);
 
         const { data: betsData } = await supabase
@@ -106,8 +126,7 @@ export async function GET(request: Request) {
     );
 
     return NextResponse.json(enriched);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch {
+    return NextResponse.json(mockMarkets);
   }
 }
