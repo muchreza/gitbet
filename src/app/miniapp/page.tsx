@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { MiniAppMarketCard } from "@/components/miniapp-market-card";
 import { MiniAppBetModal } from "@/components/miniapp-bet-modal";
+import { MiniAppComments } from "@/components/miniapp-comments";
 
 interface MarketData {
   id: string;
@@ -84,6 +85,7 @@ export default function MiniAppPage() {
   const [activeTab, setActiveTab] = useState<Tab>("markets");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(false);
+  const [commentMarketId, setCommentMarketId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -377,6 +379,7 @@ export default function MiniAppPage() {
                     market={market}
                     onBet={() => setSelectedMarket(market)}
                     onShare={() => handleShare(market)}
+                    onComment={() => setCommentMarketId(market.id)}
                   />
                 ))}
               </div>
@@ -546,6 +549,15 @@ export default function MiniAppPage() {
           onBetPlaced={handleBalanceUpdate}
         />
       )}
+      {/* Comments Modal */}
+      {commentMarketId && (
+        <MiniAppComments
+          marketId={commentMarketId}
+          user={user ? { fid: user.fid, username: user.username, pfpUrl: user.pfpUrl } : null}
+          onClose={() => setCommentMarketId(null)}
+        />
+      )}
+
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md">
         <div className="flex h-14 items-center justify-around max-w-lg mx-auto">

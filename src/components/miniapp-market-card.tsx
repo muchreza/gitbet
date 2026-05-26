@@ -1,5 +1,7 @@
 "use client";
 
+import { Sparkline } from "./miniapp-sparkline";
+
 interface MiniAppMarketCardProps {
   market: {
     id: string;
@@ -19,6 +21,7 @@ interface MiniAppMarketCardProps {
   };
   onBet: () => void;
   onShare: () => void;
+  onComment?: () => void;
 }
 
 function formatNumber(num: number): string {
@@ -43,7 +46,7 @@ function timeLeft(endDate: string): string {
   return `${hours}h left`;
 }
 
-export function MiniAppMarketCard({ market, onBet, onShare }: MiniAppMarketCardProps) {
+export function MiniAppMarketCard({ market, onBet, onShare, onComment }: MiniAppMarketCardProps) {
   const noPercent = 100 - market.yesPercent;
   const priceUp = market.price_change_24h >= 0;
 
@@ -89,9 +92,12 @@ export function MiniAppMarketCard({ market, onBet, onShare }: MiniAppMarketCardP
         </div>
       </div>
 
-      <h3 className="mt-2.5 text-sm font-semibold leading-snug text-foreground">
-        {market.question}
-      </h3>
+      <div className="mt-2.5 flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold leading-snug text-foreground flex-1">
+          {market.question}
+        </h3>
+        <Sparkline seed={market.coin_id + market.id} up={priceUp} />
+      </div>
 
       <div className="mt-1 text-[11px] text-muted">
         Target: {formatPrice(market.target_price)}
@@ -129,6 +135,17 @@ export function MiniAppMarketCard({ market, onBet, onShare }: MiniAppMarketCardP
         >
           Predict
         </button>
+        {onComment && (
+          <button
+            onClick={onComment}
+            className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted transition-colors active:bg-card-hover"
+            aria-label="Comments"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        )}
         <button
           onClick={onShare}
           className="rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted transition-colors active:bg-card-hover"
