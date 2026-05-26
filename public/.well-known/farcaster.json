@@ -1,0 +1,14 @@
+{
+  "miniapp": {
+    "version": "1",
+    "name": "GitBet",
+    "iconUrl": "https://gitbetapp.vercel.app/icon-1024",
+    "homeUrl": "https://gitbetapp.vercel.app/miniapp",
+    "splashImageUrl": "https://gitbetapp.vercel.app/icon-200",
+    "splashBackgroundColor": "#0a0a0f",
+    "subtitle": "Predict open source trends",
+    "description": "Bet on the future of GitHub repos. Predict stars, forks, releases, and trends. The prediction market for open source.",
+    "primaryCategory": "entertainment",
+    "tags": ["github", "prediction", "opensource", "betting", "developer"]
+  }
+}
