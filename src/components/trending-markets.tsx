@@ -1,9 +1,58 @@
-import { markets } from "@/lib/mock-data";
+"use client";
+
+import { useState, useEffect } from "react";
+import { markets as mockMarkets } from "@/lib/mock-data";
 import { MarketCard } from "./market-card";
 import Link from "next/link";
 
+interface ApiMarket {
+  id: string;
+  repo: string;
+  owner: string;
+  question: string;
+  description: string | null;
+  language: string | null;
+  language_color: string | null;
+  stars: number;
+  yesPercent: number;
+  volume: number;
+  hot: boolean;
+}
+
 export function TrendingMarkets() {
-  const hotMarkets = markets.filter((m) => m.hot);
+  const [markets, setMarkets] = useState<ApiMarket[]>([]);
+  const [useFallback, setUseFallback] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/markets")
+      .then((res) => {
+        if (!res.ok) throw new Error("API unavailable");
+        return res.json() as Promise<ApiMarket[]>;
+      })
+      .then((data) => {
+        const hot = data.filter((m) => m.hot);
+        setMarkets(hot.length > 0 ? hot : data.slice(0, 4));
+      })
+      .catch(() => {
+        setUseFallback(true);
+      });
+  }, []);
+
+  const fallbackMarkets = mockMarkets.filter((m) => m.hot).map((m) => ({
+    id: m.id,
+    repo: m.repo,
+    owner: m.owner,
+    question: m.question,
+    description: m.description,
+    language: m.language,
+    language_color: m.languageColor,
+    stars: m.stars,
+    yesPercent: m.yesPercent,
+    volume: m.volume,
+    hot: m.hot,
+  }));
+
+  const displayMarkets = useFallback ? fallbackMarkets : markets;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -25,7 +74,7 @@ export function TrendingMarkets() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {hotMarkets.map((market) => (
+        {displayMarkets.map((market) => (
           <MarketCard key={market.id} market={market} />
         ))}
       </div>

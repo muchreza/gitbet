@@ -1,6 +1,38 @@
-import { leaderboard } from "@/lib/mock-data";
+"use client";
+
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { leaderboard as mockLeaderboard } from "@/lib/mock-data";
+
+interface LeaderboardEntry {
+  rank: number;
+  username: string;
+  avatar: string;
+  totalBets: number;
+  winRate: number;
+  profit: number;
+  streak: number;
+}
 
 export default function LeaderboardPage() {
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/leaderboard")
+      .then((res) => {
+        if (!res.ok) throw new Error("API unavailable");
+        return res.json() as Promise<LeaderboardEntry[]>;
+      })
+      .then((data) => {
+        setEntries(data.length > 0 ? data : mockLeaderboard);
+      })
+      .catch(() => {
+        setEntries(mockLeaderboard);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div>
@@ -36,62 +68,82 @@ export default function LeaderboardPage() {
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((entry) => (
-                <tr
-                  key={entry.rank}
-                  className="border-b border-border transition-colors hover:bg-card-hover"
-                >
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                        entry.rank === 1
-                          ? "bg-warning/20 text-warning"
-                          : entry.rank === 2
-                            ? "bg-foreground/10 text-foreground"
-                            : entry.rank === 3
-                              ? "bg-orange-500/20 text-orange-400"
-                              : "bg-border text-muted"
-                      }`}
-                    >
-                      {entry.rank}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
-                        {entry.avatar}
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        {entry.username}
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-border">
+                    <td colSpan={6} className="px-4 py-4">
+                      <div className="h-4 animate-pulse rounded bg-border" />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                entries.map((entry) => (
+                  <tr
+                    key={entry.rank}
+                    className="border-b border-border transition-colors hover:bg-card-hover"
+                  >
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                          entry.rank === 1
+                            ? "bg-warning/20 text-warning"
+                            : entry.rank === 2
+                              ? "bg-foreground/10 text-foreground"
+                              : entry.rank === 3
+                                ? "bg-orange-500/20 text-orange-400"
+                                : "bg-border text-muted"
+                        }`}
+                      >
+                        {entry.rank}
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm text-muted">
-                    {entry.totalBets}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span
-                      className={`text-sm font-medium ${
-                        entry.winRate >= 70
-                          ? "text-accent"
-                          : entry.winRate >= 60
-                            ? "text-warning"
-                            : "text-muted"
-                      }`}
-                    >
-                      {entry.winRate}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm font-semibold text-accent">
-                    +${entry.profit.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className="inline-flex items-center gap-1 text-sm text-warning">
-                      🔥 {entry.streak}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {typeof entry.avatar === "string" && entry.avatar.startsWith("http") ? (
+                          <Image
+                            src={entry.avatar}
+                            alt={entry.username}
+                            width={32}
+                            height={32}
+                            className="h-8 w-8 rounded-full"
+                          />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
+                            {entry.avatar}
+                          </div>
+                        )}
+                        <span className="text-sm font-medium text-foreground">
+                          {entry.username}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm text-muted">
+                      {entry.totalBets}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span
+                        className={`text-sm font-medium ${
+                          entry.winRate >= 70
+                            ? "text-accent"
+                            : entry.winRate >= 60
+                              ? "text-warning"
+                              : "text-muted"
+                        }`}
+                      >
+                        {entry.winRate}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold text-accent">
+                      {entry.profit >= 0 ? "+" : ""}${entry.profit.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="inline-flex items-center gap-1 text-sm text-warning">
+                        {entry.streak}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -1,15 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { markets } from "@/lib/mock-data";
+import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { MarketCard } from "@/components/market-card";
+import { BetModal } from "@/components/bet-modal";
+
+interface MarketData {
+  id: string;
+  repo: string;
+  owner: string;
+  question: string;
+  description: string | null;
+  category: "stars" | "forks" | "releases" | "trending";
+  end_date: string;
+  resolved: boolean;
+  outcome: boolean | null;
+  language: string | null;
+  language_color: string | null;
+  stars: number;
+  forks: number;
+  yesPercent: number;
+  volume: number;
+  hot: boolean;
+}
 
 const filters = ["All", "Stars", "Releases", "Forks", "Trending"] as const;
 type Filter = (typeof filters)[number];
 
+async function loadMarkets(): Promise<MarketData[]> {
+  const res = await fetch("/api/markets");
+  if (!res.ok) return [];
+  return res.json() as Promise<MarketData[]>;
+}
+
 export default function MarketsPage() {
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [search, setSearch] = useState("");
+  const [markets, setMarkets] = useState<MarketData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMarket, setSelectedMarket] = useState<MarketData | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: session } = useSession();
+  const didLoad = useRef(false);
+
+  useEffect(() => {
+    if (didLoad.current && refreshKey === 0) return;
+    didLoad.current = true;
+    let cancelled = false;
+    setLoading(true);
+    loadMarkets()
+      .then((data) => { if (!cancelled) setMarkets(data); })
+      .catch(() => { /* fall back silently */ })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [refreshKey]);
 
   const filtered = markets.filter((m) => {
     const matchesFilter =
@@ -57,19 +101,42 @@ export default function MarketsPage() {
         />
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((market) => (
-          <MarketCard key={market.id} market={market} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-48 animate-pulse rounded-xl border border-border bg-card" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((market) => (
+            <MarketCard
+              key={market.id}
+              market={market}
+              onBet={session ? () => setSelectedMarket(market) : undefined}
+            />
+          ))}
+        </div>
+      )}
 
-      {filtered.length === 0 && (
+      {!loading && filtered.length === 0 && (
         <div className="mt-16 text-center">
           <p className="text-lg font-medium text-muted">No markets found</p>
           <p className="mt-1 text-sm text-muted">
             Try a different filter or search term
           </p>
         </div>
+      )}
+
+      {selectedMarket && (
+        <BetModal
+          market={selectedMarket}
+          onClose={() => setSelectedMarket(null)}
+          onBetPlaced={() => {
+            setSelectedMarket(null);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
       )}
     </div>
   );

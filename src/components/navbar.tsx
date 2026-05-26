@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
@@ -37,9 +40,46 @@ export function Navbar() {
           >
             How It Works
           </Link>
-          <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim">
-            Connect GitHub
-          </button>
+          {status === "loading" ? (
+            <div className="h-9 w-32 animate-pulse rounded-lg bg-border" />
+          ) : session ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-accent font-semibold">
+                {session.user.balance?.toLocaleString() ?? 0} pts
+              </span>
+              <div className="flex items-center gap-2">
+                {session.user.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-full"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
+                    {session.user.name?.[0]?.toUpperCase() || "U"}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {session.user.name}
+                </span>
+              </div>
+              <button
+                onClick={() => signOut()}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted transition-colors hover:text-foreground hover:border-foreground"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => signIn("github")}
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim"
+            >
+              Connect GitHub
+            </button>
+          )}
         </div>
 
         <button
@@ -81,9 +121,44 @@ export function Navbar() {
             >
               How It Works
             </Link>
-            <button className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim">
-              Connect GitHub
-            </button>
+            {session ? (
+              <>
+                <div className="flex items-center gap-2 pt-2">
+                  {session.user.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/10 text-xs font-bold text-accent">
+                      {session.user.name?.[0]?.toUpperCase() || "U"}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-foreground">
+                    {session.user.name}
+                  </span>
+                  <span className="text-xs text-accent font-semibold">
+                    {session.user.balance?.toLocaleString() ?? 0} pts
+                  </span>
+                </div>
+                <button
+                  onClick={() => signOut()}
+                  className="mt-1 rounded-lg border border-border px-4 py-2 text-sm text-muted transition-colors hover:text-foreground"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => signIn("github")}
+                className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim"
+              >
+                Connect GitHub
+              </button>
+            )}
           </div>
         </div>
       )}
