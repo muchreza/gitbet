@@ -49,6 +49,12 @@ CREATE TABLE IF NOT EXISTS bets (
 -- ALTER TABLE bets ADD COLUMN IF NOT EXISTS tx_hash TEXT;
 -- ALTER TABLE bets ADD COLUMN IF NOT EXISTS bet_type TEXT NOT NULL DEFAULT 'token' CHECK (bet_type IN ('token', 'eth'));
 
+-- Daily claims tracking (500 free token slots per day)
+CREATE TABLE IF NOT EXISTS daily_claims (
+  claim_date DATE PRIMARY KEY,
+  claim_count INTEGER NOT NULL DEFAULT 0
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_markets_category ON markets(category);
 CREATE INDEX IF NOT EXISTS idx_markets_resolved ON markets(resolved);
@@ -59,6 +65,7 @@ CREATE INDEX IF NOT EXISTS idx_bets_market_id ON bets(market_id);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE markets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_claims ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: users
 CREATE POLICY "Users are viewable by everyone" ON users FOR SELECT USING (true);
@@ -71,6 +78,10 @@ CREATE POLICY "Authenticated users can create markets" ON markets FOR INSERT WIT
 -- RLS Policies: bets
 CREATE POLICY "Bets are viewable by everyone" ON bets FOR SELECT USING (true);
 CREATE POLICY "Authenticated users can place bets" ON bets FOR INSERT WITH CHECK (true);
+
+-- RLS Policies: daily_claims
+CREATE POLICY "Daily claims are viewable by everyone" ON daily_claims FOR SELECT USING (true);
+CREATE POLICY "Service role can manage daily claims" ON daily_claims FOR ALL USING (true);
 
 -- Seed some initial markets
 INSERT INTO markets (repo, owner, question, description, category, end_date, target_value, language, language_color) VALUES
