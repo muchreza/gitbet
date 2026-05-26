@@ -35,7 +35,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
     setError(null);
 
     if (!user || !appUser) {
-      setError("Open CryptoBet from Warpcast to place bets");
+      setError("Open GitBet from Warpcast to place bets");
       return;
     }
 

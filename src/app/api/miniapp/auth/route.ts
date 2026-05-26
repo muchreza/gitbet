@@ -167,7 +167,7 @@ export async function POST(request: Request) {
     freeTokens: grantFreeTokens,
     loginStreak: 1,
     streakBonus: 0,
-    badges: [{ id: "newcomer", name: "Newcomer", icon: "🌟", description: "Welcome to CryptoBet!" }],
+    badges: [{ id: "newcomer", name: "Newcomer", icon: "🌟", description: "Welcome to GitBet!" }],
     referralCode,
     totalBets: 0,
     totalWins: 0,
@@ -184,7 +184,7 @@ interface Badge {
 function getBadges(totalBets: number, totalWins: number, streak: number): Badge[] {
   const badges: Badge[] = [];
 
-  badges.push({ id: "newcomer", name: "Newcomer", icon: "🌟", description: "Welcome to CryptoBet!" });
+  badges.push({ id: "newcomer", name: "Newcomer", icon: "🌟", description: "Welcome to GitBet!" });
 
   if (totalBets >= 1) badges.push({ id: "first_bet", name: "First Bet", icon: "🎯", description: "Placed your first bet" });
   if (totalBets >= 10) badges.push({ id: "bettor_10", name: "Regular", icon: "🔥", description: "10 bets placed" });

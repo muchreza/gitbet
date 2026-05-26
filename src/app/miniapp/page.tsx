@@ -180,7 +180,7 @@ export default function MiniAppPage() {
       const { sdk } = await import("@farcaster/miniapp-sdk");
       const domain = window.location.origin;
       await sdk.actions.composeCast({
-        text: `${market.question}\n\nPredict now on CryptoBet`,
+        text: `${market.question}\n\nPredict now on GitBet`,
         embeds: [`${domain}/miniapp`],
       });
     } catch {
@@ -197,7 +197,7 @@ export default function MiniAppPage() {
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          <p className="text-sm text-muted">Loading CryptoBet...</p>
+          <p className="text-sm text-muted">Loading GitBet...</p>
         </div>
       </div>
     );
@@ -209,7 +209,7 @@ export default function MiniAppPage() {
       {showWelcome && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-accent text-black px-4 py-3 text-center animate-in slide-in-from-top duration-300">
           <p className="text-sm font-bold">
-            Welcome to CryptoBet! You got 1,000 free tokens to start predicting!
+            Welcome to GitBet! You got 1,000 free tokens to start predicting!
           </p>
         </div>
       )}
@@ -228,10 +228,10 @@ export default function MiniAppPage() {
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-black font-bold text-sm">
-              C
+              G
             </div>
             <span className="text-lg font-bold tracking-tight">
-              Crypto<span className="text-accent">Bet</span>
+              Git<span className="text-accent">Bet</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -520,7 +520,7 @@ export default function MiniAppPage() {
               {/* Daily Rewards Info */}
               <div className="rounded-xl bg-card border border-border p-4">
                 <h3 className="text-sm font-bold text-foreground mb-2">📅 Daily Rewards</h3>
-                <p className="text-xs text-muted">Login setiap hari untuk dapat bonus token!</p>
+                <p className="text-xs text-muted">Log in every day to earn bonus tokens!</p>
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex-1 h-2 rounded-full bg-border overflow-hidden">
                     <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min((appUser.loginStreak ?? 0) * 10, 100)}%` }} />
