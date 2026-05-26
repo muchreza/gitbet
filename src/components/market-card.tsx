@@ -1,5 +1,21 @@
 import Link from "next/link";
-import type { Market } from "@/lib/mock-data";
+
+interface MarketCardProps {
+  market: {
+    id: string;
+    repo: string;
+    owner: string;
+    question: string;
+    description: string | null;
+    language: string | null;
+    language_color: string | null;
+    stars: number;
+    yesPercent: number;
+    volume: number;
+    hot: boolean;
+  };
+  onBet?: () => void;
+}
 
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
@@ -7,14 +23,11 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
-export function MarketCard({ market }: { market: Market }) {
+export function MarketCard({ market, onBet }: MarketCardProps) {
   const noPercent = 100 - market.yesPercent;
 
-  return (
-    <Link
-      href={`/markets#${market.id}`}
-      className="group block rounded-xl border border-border bg-card p-5 transition-all hover:border-accent/30 hover:bg-card-hover hover:shadow-lg hover:shadow-accent-glow/5"
-    >
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-border text-sm font-bold text-foreground">
@@ -25,10 +38,12 @@ export function MarketCard({ market }: { market: Market }) {
               {market.owner}/{market.repo}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span
-                className="inline-block h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: market.languageColor }}
-              />
+              {market.language_color && (
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: market.language_color }}
+                />
+              )}
               <span className="text-xs text-muted">{market.language}</span>
               <span className="text-xs text-muted">
                 ★ {formatNumber(market.stars)}
@@ -74,6 +89,36 @@ export function MarketCard({ market }: { market: Market }) {
           Vol: ${formatNumber(market.volume)}
         </span>
       </div>
+
+      {onBet && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onBet();
+          }}
+          className="mt-3 w-full rounded-lg bg-accent/10 py-2 text-xs font-semibold text-accent transition-colors hover:bg-accent/20"
+        >
+          Place Bet
+        </button>
+      )}
+    </>
+  );
+
+  if (onBet) {
+    return (
+      <div className="group block rounded-xl border border-border bg-card p-5 transition-all hover:border-accent/30 hover:bg-card-hover hover:shadow-lg hover:shadow-accent-glow/5">
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/markets#${market.id}`}
+      className="group block rounded-xl border border-border bg-card p-5 transition-all hover:border-accent/30 hover:bg-card-hover hover:shadow-lg hover:shadow-accent-glow/5"
+    >
+      {content}
     </Link>
   );
 }
