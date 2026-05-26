@@ -95,29 +95,37 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: existingBetData } = await supabase
-    .from("bets")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("market_id", market_id)
-    .single();
+  const isMockMarket = !market;
 
-  const existingBet = existingBetData as BetRow | null;
+  if (!isMockMarket) {
+    const { data: existingBetData } = await supabase
+      .from("bets")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("market_id", market_id)
+      .single();
 
-  if (existingBet) {
-    return NextResponse.json({ error: "You already bet on this market" }, { status: 400 });
-  }
+    const existingBet = existingBetData as BetRow | null;
 
-  const { error: betError } = await supabase.from("bets").insert({
-    user_id: user.id,
-    market_id,
-    position,
-    amount,
-    tx_hash: tx_hash || null,
-  });
+    if (existingBet) {
+      return NextResponse.json({ error: "You already bet on this market" }, { status: 400 });
+    }
 
-  if (betError) {
-    return NextResponse.json({ error: betError.message }, { status: 500 });
+    const betInsert: Record<string, unknown> = {
+      user_id: user.id,
+      market_id,
+      position,
+      amount,
+    };
+    if (tx_hash) {
+      betInsert.tx_hash = tx_hash;
+    }
+
+    const { error: betError } = await supabase.from("bets").insert(betInsert);
+
+    if (betError) {
+      return NextResponse.json({ error: betError.message }, { status: 500 });
+    }
   }
 
   let newBalance = user.balance;

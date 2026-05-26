@@ -39,9 +39,15 @@ CREATE TABLE IF NOT EXISTS bets (
   market_id UUID NOT NULL REFERENCES markets(id),
   position BOOLEAN NOT NULL, -- true = YES, false = NO
   amount INTEGER NOT NULL CHECK (amount > 0),
+  tx_hash TEXT, -- on-chain transaction hash for ETH bets
+  bet_type TEXT NOT NULL DEFAULT 'token' CHECK (bet_type IN ('token', 'eth')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(user_id, market_id)
 );
+
+-- Migration: add tx_hash and bet_type columns if table already exists
+-- ALTER TABLE bets ADD COLUMN IF NOT EXISTS tx_hash TEXT;
+-- ALTER TABLE bets ADD COLUMN IF NOT EXISTS bet_type TEXT NOT NULL DEFAULT 'token' CHECK (bet_type IN ('token', 'eth'));
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_markets_category ON markets(category);
