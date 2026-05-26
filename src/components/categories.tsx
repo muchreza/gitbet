@@ -2,32 +2,32 @@ import Link from "next/link";
 
 const categories = [
   {
-    name: "Star Predictions",
-    description: "Will this repo hit X stars?",
-    icon: "★",
+    name: "Bitcoin",
+    description: "BTC price predictions",
+    icon: "₿",
     count: 423,
     color: "text-warning",
     bg: "bg-warning/10",
   },
   {
-    name: "Release Bets",
-    description: "When will the next version drop?",
-    icon: "⚡",
-    count: 187,
+    name: "Ethereum",
+    description: "ETH price & ecosystem bets",
+    icon: "⟠",
+    count: 312,
     color: "text-purple",
     bg: "bg-purple/10",
   },
   {
-    name: "Fork Races",
-    description: "Which repo gets forked more?",
-    icon: "🔀",
-    count: 312,
+    name: "Altcoins",
+    description: "SOL, DOGE, XRP and more",
+    icon: "🪙",
+    count: 187,
     color: "text-blue",
     bg: "bg-blue/10",
   },
   {
     name: "Trending",
-    description: "What will trend next on GitHub?",
+    description: "Hottest crypto predictions",
     icon: "🔥",
     count: 325,
     color: "text-danger",
@@ -44,7 +44,7 @@ export function Categories() {
             Market Categories
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Find predictions that match your expertise
+            Find crypto predictions that match your expertise
           </p>
         </div>
 

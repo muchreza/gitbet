@@ -10,6 +10,7 @@ export interface Database {
           avatar_url: string | null;
           email: string | null;
           balance: number;
+          wallet_address: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -21,6 +22,7 @@ export interface Database {
           avatar_url?: string | null;
           email?: string | null;
           balance?: number;
+          wallet_address?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -32,45 +34,49 @@ export interface Database {
           avatar_url?: string | null;
           email?: string | null;
           balance?: number;
+          wallet_address?: string | null;
           updated_at?: string;
         };
       };
       markets: {
         Row: {
           id: string;
-          repo: string;
-          owner: string;
           question: string;
           description: string | null;
-          category: "stars" | "forks" | "releases" | "trending";
+          coin_id: string;
+          coin_symbol: string;
+          coin_name: string;
+          coin_image: string | null;
+          target_price: number;
+          category: "price_above" | "price_below" | "price_change" | "general";
           end_date: string;
           resolved: boolean;
           outcome: boolean | null;
-          target_value: number | null;
-          language: string | null;
-          language_color: string | null;
+          chain_market_id: number | null;
           created_by: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          repo: string;
-          owner: string;
           question: string;
           description?: string | null;
-          category: "stars" | "forks" | "releases" | "trending";
+          coin_id: string;
+          coin_symbol: string;
+          coin_name: string;
+          coin_image?: string | null;
+          target_price: number;
+          category: "price_above" | "price_below" | "price_change" | "general";
           end_date: string;
           resolved?: boolean;
           outcome?: boolean | null;
-          target_value?: number | null;
-          language?: string | null;
-          language_color?: string | null;
+          chain_market_id?: number | null;
           created_by?: string | null;
           created_at?: string;
         };
         Update: {
           resolved?: boolean;
           outcome?: boolean | null;
+          chain_market_id?: number | null;
         };
       };
       bets: {
@@ -80,6 +86,7 @@ export interface Database {
           market_id: string;
           position: boolean;
           amount: number;
+          tx_hash: string | null;
           created_at: string;
         };
         Insert: {
@@ -88,9 +95,25 @@ export interface Database {
           market_id: string;
           position: boolean;
           amount: number;
+          tx_hash?: string | null;
           created_at?: string;
         };
         Update: never;
+      };
+      daily_claims: {
+        Row: {
+          id: string;
+          claim_date: string;
+          claim_count: number;
+        };
+        Insert: {
+          id?: string;
+          claim_date: string;
+          claim_count?: number;
+        };
+        Update: {
+          claim_count?: number;
+        };
       };
     };
   };

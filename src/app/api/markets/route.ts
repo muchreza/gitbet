@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
-import { fetchRepoData } from "@/lib/github";
+import { getCoinPrices } from "@/lib/coingecko";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 interface MarketRow {
   id: string;
-  repo: string;
-  owner: string;
   question: string;
   description: string | null;
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  coin_image: string | null;
+  target_price: number;
   category: string;
   end_date: string;
   resolved: boolean;
   outcome: boolean | null;
-  target_value: number | null;
-  language: string | null;
-  language_color: string | null;
-  created_by: string | null;
+  chain_market_id: number | null;
   created_at: string;
 }
 
@@ -51,9 +51,13 @@ export async function GET(request: Request) {
 
     const markets = (marketsData || []) as MarketRow[];
 
+    const coinIds = [...new Set(markets.map((m) => m.coin_id))];
+    const prices = await getCoinPrices(coinIds);
+    const priceMap = new Map(prices.map((p) => [p.id, p]));
+
     const enriched = await Promise.all(
       markets.map(async (market) => {
-        const repoData = await fetchRepoData(market.owner, market.repo);
+        const coinData = priceMap.get(market.coin_id);
 
         const { data: betsData } = await supabase
           .from("bets")
@@ -79,9 +83,21 @@ export async function GET(request: Request) {
         const yesPercent = totalBets > 0 ? Math.round((yesTotal / totalBets) * 100) : 50;
 
         return {
-          ...market,
-          stars: repoData?.stargazers_count ?? 0,
-          forks: repoData?.forks_count ?? 0,
+          id: market.id,
+          question: market.question,
+          description: market.description,
+          coin_id: market.coin_id,
+          coin_symbol: market.coin_symbol,
+          coin_name: market.coin_name,
+          coin_image: coinData?.image || market.coin_image,
+          target_price: market.target_price,
+          current_price: coinData?.current_price ?? 0,
+          price_change_24h: coinData?.price_change_percentage_24h ?? 0,
+          category: market.category,
+          end_date: market.end_date,
+          resolved: market.resolved,
+          outcome: market.outcome,
+          chain_market_id: market.chain_market_id,
           yesPercent,
           volume,
           hot: volume > 500,

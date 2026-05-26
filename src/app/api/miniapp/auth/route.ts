@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const INITIAL_BALANCE = 1000;
+const DAILY_CLAIM_LIMIT = 500;
 
 interface AuthBody {
   fid?: number;
@@ -19,6 +20,14 @@ interface UserRow {
   name: string | null;
   avatar_url: string | null;
   balance: number;
+}
+
+interface DailyClaimRow {
+  claim_count: number;
+}
+
+function getTodayUTC(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 export async function POST(request: Request) {
@@ -58,7 +67,36 @@ export async function POST(request: Request) {
       avatar_url: existing.avatar_url,
       balance: existing.balance,
       isNew: false,
+      freeTokens: false,
     });
+  }
+
+  // Check daily claim limit
+  const today = getTodayUTC();
+  let grantFreeTokens = false;
+
+  const { data: claimData } = await supabase
+    .from("daily_claims")
+    .select("claim_count")
+    .eq("claim_date", today)
+    .single();
+
+  const claimRow = claimData as DailyClaimRow | null;
+  const currentCount = claimRow?.claim_count ?? 0;
+
+  if (currentCount < DAILY_CLAIM_LIMIT) {
+    grantFreeTokens = true;
+
+    if (claimRow) {
+      await supabase
+        .from("daily_claims")
+        .update({ claim_count: currentCount + 1 })
+        .eq("claim_date", today);
+    } else {
+      await supabase
+        .from("daily_claims")
+        .insert({ claim_date: today, claim_count: 1 });
+    }
   }
 
   const { data: newUserData, error: insertError } = await supabase
@@ -68,7 +106,7 @@ export async function POST(request: Request) {
       username: username || `fc_user_${fid}`,
       name: displayName || null,
       avatar_url: pfpUrl || null,
-      balance: INITIAL_BALANCE,
+      balance: grantFreeTokens ? INITIAL_BALANCE : 0,
     })
     .select("id, username, name, avatar_url, balance")
     .single();
@@ -86,5 +124,6 @@ export async function POST(request: Request) {
     avatar_url: newUser.avatar_url,
     balance: newUser.balance,
     isNew: true,
+    freeTokens: grantFreeTokens,
   });
 }

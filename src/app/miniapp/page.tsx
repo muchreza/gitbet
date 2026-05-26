@@ -7,18 +7,20 @@ import { MiniAppBetModal } from "@/components/miniapp-bet-modal";
 
 interface MarketData {
   id: string;
-  repo: string;
-  owner: string;
   question: string;
   description: string | null;
-  category: "stars" | "forks" | "releases" | "trending";
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  coin_image: string | null;
+  target_price: number;
+  current_price: number;
+  price_change_24h: number;
+  category: string;
   end_date: string;
   resolved: boolean;
   outcome: boolean | null;
-  language: string | null;
-  language_color: string | null;
-  stars: number;
-  forks: number;
+  chain_market_id: number | null;
   yesPercent: number;
   volume: number;
   hot: boolean;
@@ -36,10 +38,13 @@ interface AppUser {
   username: string;
   balance: number;
   isNew: boolean;
+  freeTokens: boolean;
 }
 
-const filters = ["All", "Stars", "Forks", "Trending"] as const;
+const filters = ["All", "BTC", "ETH", "Altcoins"] as const;
 type Filter = (typeof filters)[number];
+
+const MAJOR_COINS = ["bitcoin", "ethereum"];
 
 export default function MiniAppPage() {
   const [markets, setMarkets] = useState<MarketData[]>([]);
@@ -83,7 +88,7 @@ export default function MiniAppPage() {
             const data = (await res.json()) as AppUser;
             if (!cancelled) {
               setAppUser(data);
-              if (data.isNew) {
+              if (data.isNew && data.freeTokens) {
                 setShowWelcome(true);
                 setTimeout(() => setShowWelcome(false), 4000);
               }
@@ -119,16 +124,20 @@ export default function MiniAppPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const filtered = markets.filter((m) =>
-    activeFilter === "All" || m.category.toLowerCase() === activeFilter.toLowerCase()
-  );
+  const filtered = markets.filter((m) => {
+    if (activeFilter === "All") return true;
+    if (activeFilter === "BTC") return m.coin_id === "bitcoin";
+    if (activeFilter === "ETH") return m.coin_id === "ethereum";
+    if (activeFilter === "Altcoins") return !MAJOR_COINS.includes(m.coin_id);
+    return true;
+  });
 
   const handleShare = useCallback(async (market: MarketData) => {
     try {
       const { sdk } = await import("@farcaster/miniapp-sdk");
       const domain = window.location.origin;
       await sdk.actions.composeCast({
-        text: `${market.question}\n\nPredict now on GitBet`,
+        text: `${market.question}\n\nPredict now on CryptoBet`,
         embeds: [`${domain}/miniapp`],
       });
     } catch {
@@ -145,7 +154,7 @@ export default function MiniAppPage() {
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-          <p className="text-sm text-muted">Loading GitBet...</p>
+          <p className="text-sm text-muted">Loading CryptoBet...</p>
         </div>
       </div>
     );
@@ -157,7 +166,7 @@ export default function MiniAppPage() {
       {showWelcome && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-accent text-black px-4 py-3 text-center animate-in slide-in-from-top duration-300">
           <p className="text-sm font-bold">
-            Welcome to GitBet! You got 1,000 free points to start betting!
+            Welcome to CryptoBet! You got 1,000 free tokens to start predicting!
           </p>
         </div>
       )}
@@ -167,10 +176,10 @@ export default function MiniAppPage() {
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-black font-bold text-sm">
-              G
+              C
             </div>
             <span className="text-lg font-bold tracking-tight">
-              Git<span className="text-accent">Bet</span>
+              Crypto<span className="text-accent">Bet</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -225,7 +234,7 @@ export default function MiniAppPage() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-36 animate-pulse rounded-xl border border-border bg-card" />
+              <div key={i} className="h-40 animate-pulse rounded-xl border border-border bg-card" />
             ))}
           </div>
         ) : filtered.length === 0 ? (

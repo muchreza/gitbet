@@ -9,6 +9,8 @@ interface BetBody {
   market_id?: string;
   position?: boolean;
   amount?: number;
+  tx_hash?: string;
+  bet_type?: "token" | "eth";
 }
 
 interface UserRow {
@@ -28,7 +30,7 @@ interface BetRow {
 
 export async function POST(request: Request) {
   const body = (await request.json()) as BetBody;
-  const { fid, market_id, position, amount } = body;
+  const { fid, market_id, position, amount, tx_hash, bet_type = "token" } = body;
 
   if (!fid) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -53,11 +55,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "User not found. Please sign in first." }, { status: 404 });
   }
 
-  if (user.balance < amount) {
+  // For token bets, check balance
+  if (bet_type === "token" && user.balance < amount) {
     return NextResponse.json(
       { error: `Insufficient balance. You have ${user.balance} pts.` },
       { status: 400 },
     );
+  }
+
+  // For ETH bets, require tx_hash
+  if (bet_type === "eth" && !tx_hash) {
+    return NextResponse.json({ error: "Transaction hash required for ETH bets" }, { status: 400 });
   }
 
   const { data: marketData } = await supabase
@@ -98,18 +106,21 @@ export async function POST(request: Request) {
     market_id,
     position,
     amount,
+    tx_hash: tx_hash || null,
   });
 
   if (betError) {
     return NextResponse.json({ error: betError.message }, { status: 500 });
   }
 
-  const newBalance = user.balance - amount;
-
-  await supabase
-    .from("users")
-    .update({ balance: newBalance, updated_at: new Date().toISOString() })
-    .eq("id", user.id);
+  let newBalance = user.balance;
+  if (bet_type === "token") {
+    newBalance = user.balance - amount;
+    await supabase
+      .from("users")
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+  }
 
   return NextResponse.json({ success: true, newBalance });
 }

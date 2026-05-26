@@ -3,13 +3,15 @@ import Link from "next/link";
 interface MarketCardProps {
   market: {
     id: string;
-    repo: string;
-    owner: string;
     question: string;
     description: string | null;
-    language: string | null;
-    language_color: string | null;
-    stars: number;
+    coin_id: string;
+    coin_symbol: string;
+    coin_name: string;
+    coin_image: string | null;
+    target_price: number;
+    current_price: number;
+    price_change_24h: number;
     yesPercent: number;
     volume: number;
     hot: boolean;
@@ -23,30 +25,45 @@ function formatNumber(num: number): string {
   return num.toString();
 }
 
+function formatPrice(price: number): string {
+  if (price >= 1000) return "$" + price.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  if (price >= 1) return "$" + price.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  if (price >= 0.01) return "$" + price.toFixed(4);
+  return "$" + price.toFixed(6);
+}
+
 export function MarketCard({ market, onBet }: MarketCardProps) {
   const noPercent = 100 - market.yesPercent;
+  const priceUp = market.price_change_24h >= 0;
 
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-border text-sm font-bold text-foreground">
-            {market.owner[0].toUpperCase()}
-          </div>
+          {market.coin_image ? (
+            <img
+              src={market.coin_image}
+              alt={market.coin_name}
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-full"
+            />
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-border text-sm font-bold text-foreground uppercase">
+              {market.coin_symbol.slice(0, 2)}
+            </div>
+          )}
           <div>
-            <p className="text-xs text-muted">
-              {market.owner}/{market.repo}
+            <p className="text-xs font-semibold text-foreground">
+              {market.coin_name}
+              <span className="ml-1 text-muted uppercase">{market.coin_symbol}</span>
             </p>
             <div className="flex items-center gap-2 mt-0.5">
-              {market.language_color && (
-                <span
-                  className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: market.language_color }}
-                />
-              )}
-              <span className="text-xs text-muted">{market.language}</span>
-              <span className="text-xs text-muted">
-                ★ {formatNumber(market.stars)}
+              <span className="text-xs font-medium text-foreground">
+                {formatPrice(market.current_price)}
+              </span>
+              <span className={`text-xs font-medium ${priceUp ? "text-accent" : "text-danger"}`}>
+                {priceUp ? "+" : ""}{market.price_change_24h.toFixed(1)}%
               </span>
             </div>
           </div>
@@ -63,6 +80,9 @@ export function MarketCard({ market, onBet }: MarketCardProps) {
       </h3>
       <p className="mt-1 text-xs text-muted line-clamp-2">
         {market.description}
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        Target: {formatPrice(market.target_price)}
       </p>
 
       <div className="mt-4 flex items-center gap-2">
@@ -86,7 +106,7 @@ export function MarketCard({ market, onBet }: MarketCardProps) {
           </span>
         </div>
         <span className="text-xs text-muted">
-          Vol: ${formatNumber(market.volume)}
+          Vol: {formatNumber(market.volume)}
         </span>
       </div>
 
