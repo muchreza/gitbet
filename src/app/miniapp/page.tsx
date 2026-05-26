@@ -5,6 +5,22 @@ import Image from "next/image";
 import { MiniAppMarketCard } from "@/components/miniapp-market-card";
 import { MiniAppBetModal } from "@/components/miniapp-bet-modal";
 import { MiniAppComments } from "@/components/miniapp-comments";
+import { MiniAppPolymarketCard } from "@/components/miniapp-polymarket-card";
+
+interface PolymarketData {
+  id: string;
+  question: string;
+  description: string | null;
+  image: string | null;
+  yesPrice: number;
+  noPrice: number;
+  yesPercent: number;
+  volume: number;
+  volume24hr: number;
+  endDate: string;
+  active: boolean;
+  source: "polymarket";
+}
 
 interface MarketData {
   id: string;
@@ -65,7 +81,7 @@ interface LeaderboardEntry {
   streak: number;
 }
 
-const filters = ["All", "BTC", "ETH", "Altcoins"] as const;
+const filters = ["All", "BTC", "ETH", "Altcoins", "Polymarket"] as const;
 type Filter = (typeof filters)[number];
 type Tab = "markets" | "leaderboard" | "profile";
 
@@ -86,6 +102,9 @@ export default function MiniAppPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(false);
   const [commentMarketId, setCommentMarketId] = useState<string | null>(null);
+  const [polymarkets, setPolymarkets] = useState<PolymarketData[]>([]);
+  const [polyLoading, setPolyLoading] = useState(false);
+  const polyFetched = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,13 +186,38 @@ export default function MiniAppPage() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    if (activeFilter !== "Polymarket" || polyFetched.current) return;
+    polyFetched.current = true;
+    setPolyLoading(true);
+    fetch("/api/polymarket")
+      .then((res) => res.json())
+      .then((data: PolymarketData[]) => setPolymarkets(data))
+      .catch(() => {})
+      .finally(() => setPolyLoading(false));
+  }, [activeFilter]);
+
   const filtered = markets.filter((m) => {
     if (activeFilter === "All") return true;
     if (activeFilter === "BTC") return m.coin_id === "bitcoin";
     if (activeFilter === "ETH") return m.coin_id === "ethereum";
     if (activeFilter === "Altcoins") return !MAJOR_COINS.includes(m.coin_id);
+    if (activeFilter === "Polymarket") return false;
     return true;
   });
+
+  const handlePolyShare = useCallback(async (pm: PolymarketData) => {
+    try {
+      const { sdk } = await import("@farcaster/miniapp-sdk");
+      const domain = window.location.origin;
+      await sdk.actions.composeCast({
+        text: `${pm.question}\n\nPredict now on GitBet`,
+        embeds: [`${domain}/miniapp`],
+      });
+    } catch {
+      // not in miniapp context
+    }
+  }, []);
 
   const handleShare = useCallback(async (market: MarketData) => {
     try {
@@ -361,7 +405,49 @@ export default function MiniAppPage() {
 
           {/* Markets */}
           <div className="px-4 py-4 pb-20">
-            {loading ? (
+            {activeFilter === "Polymarket" ? (
+              polyLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-40 animate-pulse rounded-xl border border-border bg-card" />
+                  ))}
+                </div>
+              ) : polymarkets.length === 0 ? (
+                <div className="mt-16 text-center">
+                  <p className="text-sm text-muted">No Polymarket markets found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {polymarkets.map((pm) => (
+                    <MiniAppPolymarketCard
+                      key={pm.id}
+                      market={pm}
+                      onBet={() => setSelectedMarket({
+                        id: pm.id,
+                        question: pm.question,
+                        description: pm.description,
+                        coin_id: "polymarket",
+                        coin_symbol: "POLY",
+                        coin_name: "Polymarket",
+                        coin_image: pm.image,
+                        target_price: 0,
+                        current_price: pm.yesPrice,
+                        price_change_24h: 0,
+                        category: "general",
+                        end_date: pm.endDate,
+                        resolved: false,
+                        outcome: null,
+                        chain_market_id: null,
+                        yesPercent: pm.yesPercent,
+                        volume: pm.volume,
+                        hot: pm.volume24hr > 10000,
+                      })}
+                      onShare={() => handlePolyShare(pm)}
+                    />
+                  ))}
+                </div>
+              )
+            ) : loading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="h-40 animate-pulse rounded-xl border border-border bg-card" />

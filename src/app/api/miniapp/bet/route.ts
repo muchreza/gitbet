@@ -67,15 +67,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Transaction hash required for ETH bets" }, { status: 400 });
   }
 
-  const { data: marketData } = await supabase
-    .from("markets")
-    .select("id, resolved, end_date")
-    .eq("id", market_id)
-    .single();
+  const isPolymarket = market_id.startsWith("poly_");
+
+  const { data: marketData } = isPolymarket
+    ? { data: null }
+    : await supabase
+        .from("markets")
+        .select("id, resolved, end_date")
+        .eq("id", market_id)
+        .single();
 
   const market = marketData as MarketRow | null;
 
-  if (!market) {
+  if (!market && !isPolymarket) {
     const mockMarket = mockMarkets.find((m) => m.id === market_id);
     if (!mockMarket) {
       return NextResponse.json({ error: "Market not found" }, { status: 404 });
@@ -86,7 +90,7 @@ export async function POST(request: Request) {
     if (new Date(mockMarket.end_date) < new Date()) {
       return NextResponse.json({ error: "Market has ended" }, { status: 400 });
     }
-  } else {
+  } else if (market) {
     if (market.resolved) {
       return NextResponse.json({ error: "Market already resolved" }, { status: 400 });
     }
