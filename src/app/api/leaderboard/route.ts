@@ -30,7 +30,10 @@ export async function GET() {
     .order("balance", { ascending: false })
     .limit(20);
 
-  const users = (usersData || []) as UserRow[];
+  const HIDDEN_USERS = ["muchreza"];
+  const users = ((usersData || []) as UserRow[]).filter(
+    (u) => !HIDDEN_USERS.includes(u.username),
+  );
 
   if (users.length === 0) {
     return NextResponse.json([]);
