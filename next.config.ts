@@ -11,14 +11,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "github.com",
       },
-      {
-        protocol: "https",
-        hostname: "pbs.twimg.com",
-      },
-      {
-        protocol: "https",
-        hostname: "abs.twimg.com",
-      },
+
     ],
   },
 };

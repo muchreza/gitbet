@@ -12,8 +12,8 @@ export async function GET() {
       hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       hasAuthSecret: !!process.env.AUTH_SECRET,
-      hasTwitterId: !!process.env.AUTH_TWITTER_ID,
-      hasTwitterSecret: !!process.env.AUTH_TWITTER_SECRET,
+      hasGithubId: !!process.env.AUTH_GITHUB_ID,
+      hasGithubSecret: !!process.env.AUTH_GITHUB_SECRET,
     },
   });
 }

@@ -1,33 +1,30 @@
 import NextAuth from "next-auth";
-import Twitter from "next-auth/providers/twitter";
+import GitHub from "next-auth/providers/github";
 import { getServiceClient } from "./supabase";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    Twitter({
-      clientId: process.env.AUTH_TWITTER_ID,
-      clientSecret: process.env.AUTH_TWITTER_SECRET,
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "twitter" && profile) {
+      if (account?.provider === "github" && profile) {
         const supabase = getServiceClient();
-        const twitterId = account.providerAccountId;
-        const twitterProfile = profile as Record<string, unknown>;
-        const profileData = (twitterProfile.data ?? twitterProfile) as Record<string, unknown>;
-        const username =
-          String(profileData.username ?? user.name ?? "unknown");
+        const githubId = String(profile.id);
+        const username = (profile.login as string) || user.name || "unknown";
 
         const { data: existing } = await supabase
           .from("users")
           .select("id")
-          .eq("github_id", twitterId)
+          .eq("github_id", githubId)
           .single();
 
         if (!existing) {
           await supabase.from("users").insert({
-            github_id: twitterId,
+            github_id: githubId,
             username,
             name: user.name || null,
             avatar_url: user.image || null,
@@ -42,7 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               avatar_url: user.image || null,
               updated_at: new Date().toISOString(),
             })
-            .eq("github_id", twitterId);
+            .eq("github_id", githubId);
         }
       }
       return true;
@@ -65,9 +62,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-    async jwt({ token, account }) {
-      if (account) {
-        token.sub = account.providerAccountId;
+    async jwt({ token, profile }) {
+      if (profile) {
+        token.sub = String(profile.id);
       }
       return token;
     },
