@@ -10,6 +10,12 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url TEXT,
   email TEXT,
   balance INTEGER NOT NULL DEFAULT 1000,
+  login_streak INTEGER NOT NULL DEFAULT 0,
+  last_login_date TEXT,
+  total_bets INTEGER NOT NULL DEFAULT 0,
+  total_wins INTEGER NOT NULL DEFAULT 0,
+  referral_code TEXT UNIQUE,
+  referred_by TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

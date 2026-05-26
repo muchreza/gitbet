@@ -25,6 +25,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [txStatus, setTxStatus] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const chainMarketId = market.chain_market_id ?? (parseInt(market.id, 10) - 1);
   const hasContract = !!CRYPTOBET_ADDRESS && chainMarketId >= 0;
@@ -95,6 +96,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
         setTxStatus("Waiting for confirmation...");
         await publicClient.waitForTransactionReceipt({ hash });
         txHash = hash;
+        setTxHash(hash);
         setTxStatus(null);
       }
 
@@ -155,6 +157,21 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
             <p className="mt-1 text-sm text-muted">
               {amount} pts on {position ? "YES" : "NO"}
             </p>
+            {txHash && (
+              <a
+                href={`https://basescan.org/tx/${txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-3 py-1.5 text-xs font-medium text-accent transition-colors active:bg-accent/20"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+                View on Basescan
+              </a>
+            )}
           </div>
         ) : (
           <>

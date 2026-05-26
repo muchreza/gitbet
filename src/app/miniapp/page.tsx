@@ -33,12 +33,25 @@ interface FarcasterUser {
   pfpUrl: string;
 }
 
+interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+}
+
 interface AppUser {
   id: string;
   username: string;
   balance: number;
   isNew: boolean;
   freeTokens: boolean;
+  loginStreak?: number;
+  streakBonus?: number;
+  badges?: Badge[];
+  referralCode?: string;
+  totalBets?: number;
+  totalWins?: number;
 }
 
 const filters = ["All", "BTC", "ETH", "Altcoins"] as const;
@@ -55,6 +68,8 @@ export default function MiniAppPage() {
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [sdkReady, setSdkReady] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showStreak, setShowStreak] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,6 +106,9 @@ export default function MiniAppPage() {
               if (data.isNew && data.freeTokens) {
                 setShowWelcome(true);
                 setTimeout(() => setShowWelcome(false), 4000);
+              } else if (data.streakBonus && data.streakBonus > 0) {
+                setShowStreak(true);
+                setTimeout(() => setShowStreak(false), 3000);
               }
             }
           }
@@ -171,6 +189,15 @@ export default function MiniAppPage() {
         </div>
       )}
 
+      {/* Streak Banner */}
+      {showStreak && appUser?.streakBonus && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-orange-500 to-yellow-500 text-black px-4 py-3 text-center animate-in slide-in-from-top duration-300">
+          <p className="text-sm font-bold">
+            🔥 {appUser.loginStreak}-day streak! +{appUser.streakBonus} bonus tokens!
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="flex h-14 items-center justify-between px-4">
@@ -184,12 +211,23 @@ export default function MiniAppPage() {
           </div>
           <div className="flex items-center gap-3">
             {appUser && (
-              <div className="flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-accent">
-                  <circle cx="12" cy="12" r="10" />
-                  <text x="12" y="16" textAnchor="middle" fontSize="12" fill="black" fontWeight="bold">$</text>
-                </svg>
-                <span className="text-xs font-bold text-accent">{appUser.balance.toLocaleString()}</span>
+              <div className="flex items-center gap-2">
+                {appUser.loginStreak && appUser.loginStreak > 1 && (
+                  <div className="flex items-center gap-1 rounded-full bg-orange-500/10 border border-orange-500/20 px-2 py-1">
+                    <span className="text-[10px]">🔥</span>
+                    <span className="text-[10px] font-bold text-orange-400">{appUser.loginStreak}d</span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowProfile(!showProfile)}
+                  className="flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-accent">
+                    <circle cx="12" cy="12" r="10" />
+                    <text x="12" y="16" textAnchor="middle" fontSize="12" fill="black" fontWeight="bold">$</text>
+                  </svg>
+                  <span className="text-xs font-bold text-accent">{appUser.balance.toLocaleString()}</span>
+                </button>
               </div>
             )}
             {user && (
@@ -209,6 +247,70 @@ export default function MiniAppPage() {
           </div>
         </div>
       </header>
+
+      {/* Profile Panel */}
+      {showProfile && appUser && (
+        <div className="border-b border-border bg-card/50 backdrop-blur-sm px-4 py-4 animate-in slide-in-from-top duration-200">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-foreground">Your Profile</h3>
+            <button onClick={() => setShowProfile(false)} className="text-muted text-xs">Close</button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="rounded-lg bg-background border border-border p-2 text-center">
+              <p className="text-lg font-bold text-accent">{appUser.balance.toLocaleString()}</p>
+              <p className="text-[10px] text-muted">Tokens</p>
+            </div>
+            <div className="rounded-lg bg-background border border-border p-2 text-center">
+              <p className="text-lg font-bold text-foreground">{appUser.totalBets ?? 0}</p>
+              <p className="text-[10px] text-muted">Total Bets</p>
+            </div>
+            <div className="rounded-lg bg-background border border-border p-2 text-center">
+              <p className="text-lg font-bold text-foreground">{appUser.loginStreak ?? 0}</p>
+              <p className="text-[10px] text-muted">🔥 Streak</p>
+            </div>
+          </div>
+
+          {/* Badges */}
+          {appUser.badges && appUser.badges.length > 0 && (
+            <div className="mb-3">
+              <p className="text-[10px] font-semibold text-muted uppercase mb-1.5">Badges</p>
+              <div className="flex flex-wrap gap-1.5">
+                {appUser.badges.map((badge) => (
+                  <div
+                    key={badge.id}
+                    className="flex items-center gap-1 rounded-full bg-background border border-border px-2 py-1"
+                    title={badge.description}
+                  >
+                    <span className="text-xs">{badge.icon}</span>
+                    <span className="text-[10px] text-muted">{badge.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Referral */}
+          {appUser.referralCode && (
+            <div>
+              <p className="text-[10px] font-semibold text-muted uppercase mb-1.5">Invite Friends (+200 pts each)</p>
+              <div className="flex gap-2">
+                <code className="flex-1 rounded-lg bg-background border border-border px-3 py-2 text-xs text-foreground font-mono truncate">
+                  {appUser.referralCode}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(appUser.referralCode || "");
+                  }}
+                  className="rounded-lg bg-accent px-3 py-2 text-xs font-bold text-black active:bg-accent-dim"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="sticky top-14 z-30 border-b border-border bg-background/90 backdrop-blur-md px-4 py-2">
