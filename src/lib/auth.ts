@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
+import Twitter from "next-auth/providers/twitter";
+import Credentials from "next-auth/providers/credentials";
 import { getServiceClient } from "./supabase";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -8,11 +10,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
     }),
+    Twitter({
+      clientId: process.env.AUTH_TWITTER_ID,
+      clientSecret: process.env.AUTH_TWITTER_SECRET,
+    }),
+    Credentials({
+      id: "farcaster",
+      name: "Farcaster",
+      credentials: {
+        fid: { label: "FID", type: "text" },
+        username: { label: "Username", type: "text" },
+        displayName: { label: "Display Name", type: "text" },
+        pfpUrl: { label: "Profile Picture", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.fid || !credentials?.username) return null;
+        return {
+          id: `fc_${credentials.fid}`,
+          name: credentials.username as string,
+          image: (credentials.pfpUrl as string) || null,
+        };
+      },
+    }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      const supabase = getServiceClient();
+
       if (account?.provider === "github" && profile) {
-        const supabase = getServiceClient();
         const githubId = String(profile.id);
         const username = (profile.login as string) || user.name || "unknown";
 
@@ -41,7 +66,66 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             })
             .eq("github_id", githubId);
         }
+      } else if (account?.provider === "twitter" && profile) {
+        const p = profile as Record<string, unknown>;
+        const data = (p.data || p) as Record<string, unknown>;
+        const twitterId = `tw_${data.id || p.id}`;
+        const username = (data.username as string) || user.name || "unknown";
+
+        const { data: existing } = await supabase
+          .from("users")
+          .select("id")
+          .eq("github_id", twitterId)
+          .single();
+
+        if (!existing) {
+          await supabase.from("users").insert({
+            github_id: twitterId,
+            username,
+            name: (data.name as string) || user.name || null,
+            avatar_url: user.image || null,
+          });
+        } else {
+          await supabase
+            .from("users")
+            .update({
+              username,
+              name: (data.name as string) || user.name || null,
+              avatar_url: user.image || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("github_id", twitterId);
+        }
+      } else if (account?.provider === "farcaster" && user.id) {
+        const fcId = user.id;
+        const username = user.name || "unknown";
+
+        const { data: existing } = await supabase
+          .from("users")
+          .select("id")
+          .eq("github_id", fcId)
+          .single();
+
+        if (!existing) {
+          await supabase.from("users").insert({
+            github_id: fcId,
+            username,
+            name: user.name || null,
+            avatar_url: user.image || null,
+          });
+        } else {
+          await supabase
+            .from("users")
+            .update({
+              username,
+              name: user.name || null,
+              avatar_url: user.image || null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("github_id", fcId);
+        }
       }
+
       return true;
     },
     async session({ session, token }) {
@@ -62,9 +146,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-    async jwt({ token, profile }) {
-      if (profile) {
+    async jwt({ token, user, account, profile }) {
+      if (account?.provider === "github" && profile) {
         token.sub = String(profile.id);
+      } else if (account?.provider === "twitter" && profile) {
+        const p = profile as Record<string, unknown>;
+        const data = (p.data || p) as Record<string, unknown>;
+        token.sub = `tw_${data.id || p.id}`;
+      } else if (account?.provider === "farcaster" && user) {
+        token.sub = user.id;
       }
       return token;
     },
