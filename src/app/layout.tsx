@@ -20,6 +20,23 @@ export const metadata: Metadata = {
   description:
     "Bet on GitHub repos, predict stars, forks, and trends. The prediction market for open source developers.",
   keywords: ["github", "prediction market", "open source", "betting", "developer"],
+  metadataBase: new URL("https://gitbetapp.vercel.app"),
+  openGraph: {
+    title: "GitBet — Predict the Future of Open Source",
+    description:
+      "Bet on GitHub repos, predict stars, forks, and trends. The prediction market for open source developers.",
+    url: "https://gitbetapp.vercel.app",
+    siteName: "GitBet",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GitBet — Predict the Future of Open Source",
+    description:
+      "Bet on GitHub repos, predict stars, forks, and trends. The prediction market for open source developers.",
+    creator: "@gitbetfun",
+  },
 };
 
 export default function RootLayout({

@@ -50,18 +50,13 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground">Resources</h3>
             <ul className="mt-3 space-y-2">
               <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-foreground transition-colors">
+                <a href="https://github.com/muchreza/gitbet" target="_blank" rel="noopener noreferrer" className="text-sm text-muted hover:text-foreground transition-colors">
                   GitHub
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted hover:text-foreground transition-colors">
-                  API Docs
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-muted hover:text-foreground transition-colors">
-                  Blog
+                <a href="/how-it-works" className="text-sm text-muted hover:text-foreground transition-colors">
+                  Docs
                 </a>
               </li>
             </ul>
@@ -76,14 +71,18 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted hover:text-foreground transition-colors"
-                  id="twitter-link"
                 >
                   @gitbetfun
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-muted hover:text-foreground transition-colors">
-                  Discord
+                <a
+                  href="https://farcaster.xyz/miniapps/AhzSuU74H8Jj/gitbet"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted hover:text-foreground transition-colors"
+                >
+                  Farcaster
                 </a>
               </li>
             </ul>

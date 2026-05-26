@@ -135,7 +135,7 @@ export function MarketCard({ market, onBet }: MarketCardProps) {
 
   return (
     <Link
-      href={`/markets#${market.id}`}
+      href={`/markets/${market.id}`}
       className="group block rounded-xl border border-border bg-card p-5 transition-all hover:border-accent/30 hover:bg-card-hover hover:shadow-lg hover:shadow-accent-glow/5"
     >
       {content}
