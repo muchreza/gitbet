@@ -1,4 +1,4 @@
-export const CRYPTOBET_ADDRESS = process.env.NEXT_PUBLIC_CRYPTOBET_ADDRESS as `0x${string}` | undefined;
+export const CRYPTOBET_ADDRESS = (process.env.NEXT_PUBLIC_CRYPTOBET_ADDRESS || "0xb23547c7b7b758f3e5b6e562caf0ce5ef9b60f93") as `0x${string}`;
 
 export const BASE_CHAIN_ID = 8453;
 export const BASE_RPC = "https://mainnet.base.org";
