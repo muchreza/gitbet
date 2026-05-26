@@ -9,11 +9,12 @@ interface MiniAppBetModalProps {
     yesPercent: number;
   };
   user: { fid: number; username: string } | null;
+  appUser: { id: string; balance: number } | null;
   onClose: () => void;
-  onBetPlaced: () => void;
+  onBetPlaced: (newBalance: number) => void;
 }
 
-export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppBetModalProps) {
+export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }: MiniAppBetModalProps) {
   const [position, setPosition] = useState<boolean>(true);
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,8 +25,8 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
     e.preventDefault();
     setError(null);
 
-    if (!user) {
-      setError("Sign in with Farcaster to place bets");
+    if (!user || !appUser) {
+      setError("Open GitBet from Warpcast to place bets");
       return;
     }
 
@@ -35,19 +36,25 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
       return;
     }
 
+    if (betAmount > appUser.balance) {
+      setError(`Insufficient balance. You have ${appUser.balance} pts.`);
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/bets", {
+      const res = await fetch("/api/miniapp/bet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          fid: user.fid,
           market_id: market.id,
           position,
           amount: betAmount,
         }),
       });
 
-      const data = (await res.json()) as { error?: string; success?: boolean };
+      const data = (await res.json()) as { error?: string; success?: boolean; newBalance?: number };
 
       if (!res.ok) {
         setError(data.error || "Failed to place bet");
@@ -55,7 +62,11 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
       }
 
       setSuccess(true);
-      setTimeout(() => onBetPlaced(), 1200);
+      if (data.newBalance !== undefined) {
+        setTimeout(() => onBetPlaced(data.newBalance as number), 1200);
+      } else {
+        setTimeout(() => onBetPlaced(appUser.balance - betAmount), 1200);
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -98,7 +109,14 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
 
             <p className="mt-2 text-sm text-muted leading-snug">{market.question}</p>
 
-            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            {appUser && (
+              <div className="mt-3 flex items-center gap-1.5 text-xs text-muted">
+                <span>Balance:</span>
+                <span className="font-bold text-accent">{appUser.balance.toLocaleString()} pts</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -131,6 +149,7 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="Amount (points)"
                   min="1"
+                  max={appUser?.balance}
                   className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <div className="mt-2 flex gap-2">
@@ -139,7 +158,8 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
                       key={v}
                       type="button"
                       onClick={() => setAmount(String(v))}
-                      className="flex-1 rounded-lg bg-card border border-border py-1.5 text-xs text-muted active:bg-card-hover"
+                      disabled={appUser ? v > appUser.balance : false}
+                      className="flex-1 rounded-lg bg-card border border-border py-1.5 text-xs text-muted active:bg-card-hover disabled:opacity-30"
                     >
                       {v}
                     </button>
@@ -151,7 +171,7 @@ export function MiniAppBetModal({ market, user, onClose, onBetPlaced }: MiniAppB
 
               <button
                 type="submit"
-                disabled={loading || !amount}
+                disabled={loading || !amount || !appUser}
                 className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-black transition-colors active:bg-accent-dim disabled:opacity-50"
               >
                 {loading ? "Placing..." : `Bet ${amount || "0"} pts on ${position ? "YES" : "NO"}`}
