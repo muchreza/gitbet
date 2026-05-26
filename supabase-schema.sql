@@ -61,17 +61,30 @@ CREATE TABLE IF NOT EXISTS daily_claims (
   claim_count INTEGER NOT NULL DEFAULT 0
 );
 
+-- Comments table (market discussions)
+CREATE TABLE IF NOT EXISTS comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  market_id TEXT NOT NULL,
+  fid INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  avatar_url TEXT,
+  content TEXT NOT NULL CHECK (char_length(content) <= 280),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_markets_category ON markets(category);
 CREATE INDEX IF NOT EXISTS idx_markets_resolved ON markets(resolved);
 CREATE INDEX IF NOT EXISTS idx_bets_user_id ON bets(user_id);
 CREATE INDEX IF NOT EXISTS idx_bets_market_id ON bets(market_id);
+CREATE INDEX IF NOT EXISTS idx_comments_market_id ON comments(market_id);
 
 -- Enable Row Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE markets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: users
 CREATE POLICY "Users are viewable by everyone" ON users FOR SELECT USING (true);
@@ -88,6 +101,10 @@ CREATE POLICY "Authenticated users can place bets" ON bets FOR INSERT WITH CHECK
 -- RLS Policies: daily_claims
 CREATE POLICY "Daily claims are viewable by everyone" ON daily_claims FOR SELECT USING (true);
 CREATE POLICY "Service role can manage daily claims" ON daily_claims FOR ALL USING (true);
+
+-- RLS Policies: comments
+CREATE POLICY "Comments are viewable by everyone" ON comments FOR SELECT USING (true);
+CREATE POLICY "Anyone can post comments" ON comments FOR INSERT WITH CHECK (true);
 
 -- Seed some initial markets
 INSERT INTO markets (repo, owner, question, description, category, end_date, target_value, language, language_color) VALUES
