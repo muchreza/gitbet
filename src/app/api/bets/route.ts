@@ -56,48 +56,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
   }
 
-  const { data: marketData } = await supabase
-    .from("markets")
-    .select("id, resolved, end_date")
-    .eq("id", market_id)
-    .single();
+  const isPolymarket = market_id.startsWith("poly_");
 
-  const market = marketData as MarketRow | null;
+  if (!isPolymarket) {
+    const { data: marketData } = await supabase
+      .from("markets")
+      .select("id, resolved, end_date")
+      .eq("id", market_id)
+      .single();
 
-  if (!market) {
-    return NextResponse.json({ error: "Market not found" }, { status: 404 });
-  }
+    const market = marketData as MarketRow | null;
 
-  if (market.resolved) {
-    return NextResponse.json({ error: "Market already resolved" }, { status: 400 });
-  }
+    if (!market) {
+      return NextResponse.json({ error: "Market not found" }, { status: 404 });
+    }
 
-  if (new Date(market.end_date) < new Date()) {
-    return NextResponse.json({ error: "Market has ended" }, { status: 400 });
-  }
+    if (market.resolved) {
+      return NextResponse.json({ error: "Market already resolved" }, { status: 400 });
+    }
 
-  const { data: existingBetData } = await supabase
-    .from("bets")
-    .select("id")
-    .eq("user_id", session.user.id)
-    .eq("market_id", market_id)
-    .single();
+    if (new Date(market.end_date) < new Date()) {
+      return NextResponse.json({ error: "Market has ended" }, { status: 400 });
+    }
 
-  const existingBet = existingBetData as BetRow | null;
+    const { data: existingBetData } = await supabase
+      .from("bets")
+      .select("id")
+      .eq("user_id", session.user.id)
+      .eq("market_id", market_id)
+      .single();
 
-  if (existingBet) {
-    return NextResponse.json({ error: "You already bet on this market" }, { status: 400 });
-  }
+    const existingBet = existingBetData as BetRow | null;
 
-  const { error: betError } = await supabase.from("bets").insert({
-    user_id: session.user.id,
-    market_id,
-    position,
-    amount,
-  });
+    if (existingBet) {
+      return NextResponse.json({ error: "You already bet on this market" }, { status: 400 });
+    }
 
-  if (betError) {
-    return NextResponse.json({ error: betError.message }, { status: 500 });
+    const { error: betError } = await supabase.from("bets").insert({
+      user_id: session.user.id,
+      market_id,
+      position,
+      amount,
+    });
+
+    if (betError) {
+      return NextResponse.json({ error: betError.message }, { status: 500 });
+    }
   }
 
   const newBalance = user.balance - amount;
