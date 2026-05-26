@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 interface UserRow {
   id: string;
   username: string;

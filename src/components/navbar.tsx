@@ -74,10 +74,10 @@ export function Navbar() {
             </div>
           ) : (
             <button
-              onClick={() => signIn("github")}
+              onClick={() => signIn("twitter")}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim"
             >
-              Connect GitHub
+              Connect X
             </button>
           )}
         </div>
@@ -153,10 +153,10 @@ export function Navbar() {
               </>
             ) : (
               <button
-                onClick={() => signIn("github")}
+                onClick={() => signIn("twitter")}
                 className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim"
               >
-                Connect GitHub
+                Connect X
               </button>
             )}
           </div>
