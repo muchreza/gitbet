@@ -31,6 +31,13 @@ interface FarcasterUser {
   pfpUrl: string;
 }
 
+interface AppUser {
+  id: string;
+  username: string;
+  balance: number;
+  isNew: boolean;
+}
+
 const filters = ["All", "Stars", "Forks", "Trending"] as const;
 type Filter = (typeof filters)[number];
 
@@ -40,7 +47,9 @@ export default function MiniAppPage() {
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [selectedMarket, setSelectedMarket] = useState<MarketData | null>(null);
   const [user, setUser] = useState<FarcasterUser | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [sdkReady, setSdkReady] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,12 +60,35 @@ export default function MiniAppPage() {
 
         const context = await sdk.context;
         if (context?.user && !cancelled) {
-          setUser({
+          const fcUser: FarcasterUser = {
             fid: context.user.fid,
             username: context.user.username ?? "",
             displayName: context.user.displayName ?? "",
             pfpUrl: context.user.pfpUrl ?? "",
+          };
+          setUser(fcUser);
+
+          const res = await fetch("/api/miniapp/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fid: fcUser.fid,
+              username: fcUser.username,
+              displayName: fcUser.displayName,
+              pfpUrl: fcUser.pfpUrl,
+            }),
           });
+
+          if (res.ok) {
+            const data = (await res.json()) as AppUser;
+            if (!cancelled) {
+              setAppUser(data);
+              if (data.isNew) {
+                setShowWelcome(true);
+                setTimeout(() => setShowWelcome(false), 4000);
+              }
+            }
+          }
         }
 
         await sdk.actions.ready();
@@ -104,6 +136,10 @@ export default function MiniAppPage() {
     }
   }, []);
 
+  const handleBalanceUpdate = useCallback((newBalance: number) => {
+    setAppUser((prev) => prev ? { ...prev, balance: newBalance } : prev);
+  }, []);
+
   if (!sdkReady) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -117,6 +153,15 @@ export default function MiniAppPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* Welcome Banner */}
+      {showWelcome && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-accent text-black px-4 py-3 text-center animate-in slide-in-from-top duration-300">
+          <p className="text-sm font-bold">
+            Welcome to GitBet! You got 1,000 free points to start betting!
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="flex h-14 items-center justify-between px-4">
@@ -128,20 +173,31 @@ export default function MiniAppPage() {
               Git<span className="text-accent">Bet</span>
             </span>
           </div>
-          {user && (
-            <div className="flex items-center gap-2">
-              {user.pfpUrl && (
-                <Image
-                  src={user.pfpUrl}
-                  alt={user.displayName}
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 rounded-full"
-                />
-              )}
-              <span className="text-xs text-muted">@{user.username}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {appUser && (
+              <div className="flex items-center gap-1 rounded-full bg-card border border-border px-2.5 py-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-accent">
+                  <circle cx="12" cy="12" r="10" />
+                  <text x="12" y="16" textAnchor="middle" fontSize="12" fill="black" fontWeight="bold">$</text>
+                </svg>
+                <span className="text-xs font-bold text-accent">{appUser.balance.toLocaleString()}</span>
+              </div>
+            )}
+            {user && (
+              <div className="flex items-center gap-1.5">
+                {user.pfpUrl && (
+                  <Image
+                    src={user.pfpUrl}
+                    alt={user.displayName}
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full"
+                  />
+                )}
+                <span className="text-xs text-muted">@{user.username}</span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -195,10 +251,9 @@ export default function MiniAppPage() {
         <MiniAppBetModal
           market={selectedMarket}
           user={user}
+          appUser={appUser}
           onClose={() => setSelectedMarket(null)}
-          onBetPlaced={() => {
-            setSelectedMarket(null);
-          }}
+          onBetPlaced={handleBalanceUpdate}
         />
       )}
     </div>
