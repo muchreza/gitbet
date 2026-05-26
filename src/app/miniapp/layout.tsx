@@ -9,7 +9,7 @@ const miniappEmbed = JSON.stringify({
     title: "Predict Now",
     action: {
       type: "launch_miniapp",
-      name: "CryptoBet",
+      name: "GitBet",
       url: `${DOMAIN}/miniapp`,
       splashImageUrl: `${DOMAIN}/icon-200`,
       splashBackgroundColor: "#0a0a0f",
@@ -18,7 +18,7 @@ const miniappEmbed = JSON.stringify({
 });
 
 export const metadata: Metadata = {
-  title: "CryptoBet — Crypto Prediction Market",
+  title: "GitBet — Crypto Prediction Market",
   description: "Predict crypto prices. Bet on BTC, ETH, SOL, and more. Powered by Base chain.",
   other: {
     "fc:miniapp": miniappEmbed,
