@@ -1,4 +1,9 @@
 {
+  "accountAssociation": {
+    "header": "eyJmaWQiOjMzMzMyNTIsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgzNGZFMTNlQTU1NmQ4MGRmQWFjNWZjZDg2Qzk0MkQ1MjA5QmEwYTgxIn0",
+    "payload": "eyJkb21haW4iOiJnaXRiZXRhcHAudmVyY2VsLmFwcCJ9",
+    "signature": "doiezb09nWQW5kL0iT6MZQkZ5pvLC7pBY0kwLwmcx1FHMS65djPbA2W9yZqhd29ImjbNMyoP0t4V1Zn23j/FGxw="
+  },
   "miniapp": {
     "version": "1",
     "name": "GitBet",
