@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
+import { markets as mockMarkets } from "@/lib/mock-data";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -55,7 +56,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "User not found. Please sign in first." }, { status: 404 });
   }
 
-  // For token bets, check balance
   if (bet_type === "token" && user.balance < amount) {
     return NextResponse.json(
       { error: `Insufficient balance. You have ${user.balance} pts.` },
@@ -63,7 +63,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // For ETH bets, require tx_hash
   if (bet_type === "eth" && !tx_hash) {
     return NextResponse.json({ error: "Transaction hash required for ETH bets" }, { status: 400 });
   }
@@ -77,15 +76,23 @@ export async function POST(request: Request) {
   const market = marketData as MarketRow | null;
 
   if (!market) {
-    return NextResponse.json({ error: "Market not found" }, { status: 404 });
-  }
-
-  if (market.resolved) {
-    return NextResponse.json({ error: "Market already resolved" }, { status: 400 });
-  }
-
-  if (new Date(market.end_date) < new Date()) {
-    return NextResponse.json({ error: "Market has ended" }, { status: 400 });
+    const mockMarket = mockMarkets.find((m) => m.id === market_id);
+    if (!mockMarket) {
+      return NextResponse.json({ error: "Market not found" }, { status: 404 });
+    }
+    if (mockMarket.resolved) {
+      return NextResponse.json({ error: "Market already resolved" }, { status: 400 });
+    }
+    if (new Date(mockMarket.end_date) < new Date()) {
+      return NextResponse.json({ error: "Market has ended" }, { status: 400 });
+    }
+  } else {
+    if (market.resolved) {
+      return NextResponse.json({ error: "Market already resolved" }, { status: 400 });
+    }
+    if (new Date(market.end_date) < new Date()) {
+      return NextResponse.json({ error: "Market has ended" }, { status: 400 });
+    }
   }
 
   const { data: existingBetData } = await supabase
