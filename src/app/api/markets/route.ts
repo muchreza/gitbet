@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 import { fetchRepoData } from "@/lib/github";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 interface MarketRow {
   id: string;
   repo: string;
@@ -25,65 +28,70 @@ interface BetRow {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category");
+  try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category");
 
-  const supabase = getServiceClient();
+    const supabase = getServiceClient();
 
-  let query = supabase
-    .from("markets")
-    .select("*")
-    .order("created_at", { ascending: false });
+    let query = supabase
+      .from("markets")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (category && category !== "all") {
-    query = query.eq("category", category);
-  }
+    if (category && category !== "all") {
+      query = query.eq("category", category);
+    }
 
-  const { data: marketsData, error } = await query;
+    const { data: marketsData, error } = await query;
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-  const markets = (marketsData || []) as MarketRow[];
+    const markets = (marketsData || []) as MarketRow[];
 
-  const enriched = await Promise.all(
-    markets.map(async (market) => {
-      const repoData = await fetchRepoData(market.owner, market.repo);
+    const enriched = await Promise.all(
+      markets.map(async (market) => {
+        const repoData = await fetchRepoData(market.owner, market.repo);
 
-      const { data: betsData } = await supabase
-        .from("bets")
-        .select("position, amount")
-        .eq("market_id", market.id);
+        const { data: betsData } = await supabase
+          .from("bets")
+          .select("position, amount")
+          .eq("market_id", market.id);
 
-      const bets = (betsData || []) as BetRow[];
+        const bets = (betsData || []) as BetRow[];
 
-      let yesTotal = 0;
-      let noTotal = 0;
-      let volume = 0;
+        let yesTotal = 0;
+        let noTotal = 0;
+        let volume = 0;
 
-      for (const bet of bets) {
-        volume += bet.amount;
-        if (bet.position) {
-          yesTotal += bet.amount;
-        } else {
-          noTotal += bet.amount;
+        for (const bet of bets) {
+          volume += bet.amount;
+          if (bet.position) {
+            yesTotal += bet.amount;
+          } else {
+            noTotal += bet.amount;
+          }
         }
-      }
 
-      const totalBets = yesTotal + noTotal;
-      const yesPercent = totalBets > 0 ? Math.round((yesTotal / totalBets) * 100) : 50;
+        const totalBets = yesTotal + noTotal;
+        const yesPercent = totalBets > 0 ? Math.round((yesTotal / totalBets) * 100) : 50;
 
-      return {
-        ...market,
-        stars: repoData?.stargazers_count ?? 0,
-        forks: repoData?.forks_count ?? 0,
-        yesPercent,
-        volume,
-        hot: volume > 500,
-      };
-    })
-  );
+        return {
+          ...market,
+          stars: repoData?.stargazers_count ?? 0,
+          forks: repoData?.forks_count ?? 0,
+          yesPercent,
+          volume,
+          hot: volume > 500,
+        };
+      })
+    );
 
-  return NextResponse.json(enriched);
+    return NextResponse.json(enriched);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
