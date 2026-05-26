@@ -1,6 +1,32 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
+
+interface Stats {
+  totalMarkets: number;
+  totalVolume: number;
+  totalUsers: number;
+  totalBets: number;
+  avgAccuracy: number;
+}
+
+function formatStat(num: number): string {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+  if (num >= 1000) return (num / 1000).toFixed(1) + "k";
+  return num.toString();
+}
 
 export function Hero() {
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((r) => r.json())
+      .then((data: Stats) => setStats(data))
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--accent-glow)_0%,_transparent_60%)]" />
@@ -11,7 +37,7 @@ export function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
             </span>
-            Live — 1,247 Active Markets
+            Live — {stats ? stats.totalMarkets : "..."} Active Markets
           </div>
 
           <h1 className="animate-fade-in mt-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl" style={{ animationDelay: "0.1s" }}>
@@ -57,9 +83,9 @@ export function Hero() {
           </div>
 
           <div className="animate-fade-in mt-10 grid grid-cols-3 gap-6 sm:gap-10" style={{ animationDelay: "0.4s" }}>
-            <QuickStat value="$2.3M" label="Total Volume" />
-            <QuickStat value="18.5k" label="Predictors" />
-            <QuickStat value="72%" label="Avg Accuracy" />
+            <QuickStat value={stats ? formatStat(stats.totalVolume) + " pts" : "..."} label="Total Volume" />
+            <QuickStat value={stats ? formatStat(stats.totalUsers) : "..."} label="Predictors" />
+            <QuickStat value={stats ? stats.avgAccuracy + "%" : "..."} label="Avg Accuracy" />
           </div>
         </div>
       </div>
