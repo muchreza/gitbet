@@ -3,11 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/miniapp")) return null;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
