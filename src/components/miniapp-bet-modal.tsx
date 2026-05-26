@@ -27,10 +27,11 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [betMode, setBetMode] = useState<BetMode>("token");
+  const [betMode, setBetMode] = useState<BetMode>("eth");
   const [txStatus, setTxStatus] = useState<string | null>(null);
 
-  const hasContract = !!CRYPTOBET_ADDRESS && market.chain_market_id !== null;
+  const chainMarketId = market.chain_market_id ?? (parseInt(market.id, 10) - 1);
+  const hasContract = !!CRYPTOBET_ADDRESS && chainMarketId >= 0;
   const hasTokenBalance = appUser && appUser.balance > 0;
 
   async function handleTokenBet() {
@@ -90,7 +91,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
       return;
     }
 
-    if (!hasContract) {
+    if (!hasContract || chainMarketId < 0) {
       setError("On-chain betting not available for this market");
       return;
     }
@@ -140,7 +141,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
         address: CRYPTOBET_ADDRESS as `0x${string}`,
         abi: CRYPTOBET_ABI,
         functionName: "placeBet",
-        args: [BigInt(market.chain_market_id as number), position],
+        args: [BigInt(chainMarketId), position],
         value: parseEther(ethAmount),
         account: accounts[0] as `0x${string}`,
       });
@@ -225,7 +226,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
             <p className="mt-2 text-sm text-muted leading-snug">{market.question}</p>
 
             {/* Bet mode toggle */}
-            {hasContract && (
+            {(hasContract || hasTokenBalance) && (
               <div className="mt-3 flex rounded-lg bg-card border border-border p-0.5">
                 <button
                   type="button"
@@ -359,7 +360,7 @@ export function MiniAppBetModal({ market, user, appUser, onClose, onBetPlaced }:
 
               <button
                 type="submit"
-                disabled={loading || (betMode === "token" ? !amount : !ethAmount) || !appUser}
+                disabled={loading || (betMode === "token" ? !amount || !appUser : !ethAmount)}
                 className="w-full rounded-xl bg-accent py-3.5 text-sm font-bold text-black transition-colors active:bg-accent-dim disabled:opacity-50"
               >
                 {loading
