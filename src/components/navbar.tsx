@@ -37,6 +37,12 @@ export function Navbar() {
           >
             How It Works
           </Link>
+          <Link
+            href="/mint"
+            className="text-sm font-semibold text-purple transition-colors hover:text-foreground"
+          >
+            Ethereal Mages
+          </Link>
           <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim">
             Connect GitHub
           </button>
@@ -80,6 +86,13 @@ export function Navbar() {
               className="text-sm text-muted transition-colors hover:text-foreground"
             >
               How It Works
+            </Link>
+            <Link
+              href="/mint"
+              onClick={() => setMobileOpen(false)}
+              className="text-sm font-semibold text-purple transition-colors hover:text-foreground"
+            >
+              Ethereal Mages
             </Link>
             <button className="mt-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-accent-dim">
               Connect GitHub
